@@ -1,0 +1,47 @@
+﻿<Window x:Class="StudioManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:StudioManager"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="MainWindow" Height="350" Width="550">
+    <Window.CommandBindings>
+        <CommandBinding Command="Delete" Executed="ItemDelete" />
+    </Window.CommandBindings>
+    <Window.Resources>
+
+        <DataTemplate DataType="{x:Type c:ProjectItem}">
+            <DockPanel Width="Auto">
+                <Image DockPanel.Dock="Left" Width="80" Height="80" Margin="0,0,10,0" Source="{Binding Image}" VerticalAlignment="Top" />
+                <StackPanel DockPanel.Dock="Left">
+                    <TextBlock Text="{Binding Path=Title}" />
+                    <TextBlock Text="{Binding Path=Comment}" />
+                </StackPanel>
+                <Button DockPanel.Dock="Right" Content="Delete" Command="Delete" CommandParameter="{Binding}" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" />
+            </DockPanel>
+        </DataTemplate>
+
+    </Window.Resources>
+    <Grid>
+        <ComboBox Name="SelectedProject" ItemsSource="{Binding Path=Projects}" HorizontalAlignment="Left" Margin="20,22,0,0" VerticalAlignment="Top" Width="500" SelectionChanged="ComboBox_Selectionchanged">
+        </ComboBox>
+
+        <ItemsControl ItemsSource="{Binding Path=ProjectItems}" Margin="20,60,20,0">
+            <ItemsControl.Template>
+                <ControlTemplate>
+                    <ScrollViewer Padding="{TemplateBinding Control.Padding}" Focusable="False">
+                        <ItemsPresenter SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"/>
+                    </ScrollViewer>
+                </ControlTemplate>
+            </ItemsControl.Template>
+        </ItemsControl>
+        <Expander  Header="New Project" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" Width="Auto">
+            <Grid Background="BurlyWood">
+                <DockPanel Margin="5,5,5,5" Width="Auto">
+                    <TextBox DockPanel.Dock="Left" Name="newProjectName" HorizontalAlignment="Left" Height="23" Margin="0,0,5,0" TextWrapping="Wrap" Text="Project Name" VerticalAlignment="Top" Width="120"/>
+                    <Button DockPanel.Dock="Right" Content="Create Project" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Click="CreateNewProject" />
+                </DockPanel>
+            </Grid>
+        </Expander>
+
+    </Grid>
+</Window>
