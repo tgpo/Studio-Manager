@@ -6,6 +6,9 @@
         Title="MainWindow" Height="350" Width="550">
     <Window.CommandBindings>
         <CommandBinding Command="Delete" Executed="ItemDelete" />
+        <CommandBinding Command="c:Command.Rename" Executed="RenameFile" />
+        <CommandBinding Command="c:Command.CreateProject" Executed="CreateNewProject" />
+        
     </Window.CommandBindings>
     <Window.Resources>
 
@@ -16,6 +19,7 @@
                     <TextBlock Text="{Binding Path=Title}" />
                     <TextBlock Text="{Binding Path=Comment}" />
                 </StackPanel>
+                <Button DockPanel.Dock="Right" Content="Rename" Command="c:Command.Rename" CommandParameter="{Binding}" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" />
                 <Button DockPanel.Dock="Right" Content="Delete" Command="Delete" CommandParameter="{Binding}" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" />
             </DockPanel>
         </DataTemplate>
@@ -38,7 +42,7 @@
             <Grid Background="BurlyWood">
                 <DockPanel Margin="5,5,5,5" Width="Auto">
                     <TextBox DockPanel.Dock="Left" Name="newProjectName" HorizontalAlignment="Left" Height="23" Margin="0,0,5,0" TextWrapping="Wrap" Text="Project Name" VerticalAlignment="Top" Width="120"/>
-                    <Button DockPanel.Dock="Right" Content="Create Project" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Click="CreateNewProject" />
+                    <Button DockPanel.Dock="Right" Content="Create Project" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Command="c:Command.CreateProject" CommandParameter="{Binding}" />
                 </DockPanel>
             </Grid>
         </Expander>

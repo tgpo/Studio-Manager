@@ -32,12 +32,21 @@ namespace StudioManager
 
     }
 
+    // Define Custom commands used in XAML
+    public static class Command
+    {
+        public static readonly RoutedUICommand Rename = new RoutedUICommand("Rename Filename", "RenameFile", typeof(MainWindow));
+        public static readonly RoutedUICommand CreateProject = new RoutedUICommand("Create New Project", "CreateProject", typeof(MainWindow));
+    }
+
     // Interaction logic for MainWindow.xaml
     public partial class MainWindow : Window
     {
+
         // Vars:
         // <ItemList> - Collection of items for current project
         // <ProjectItems> - Public collection that returns <ItemList>. Used for ItemSource binding.
+
         
         // Declare <ItemList> as ObservableCollection of ProjectItem
         ObservableCollection<ProjectItem> ItemList = new ObservableCollection<ProjectItem>();
@@ -142,30 +151,48 @@ namespace StudioManager
  
         }
 
+        // Method called by Rename button
+        // Renames ProjectItem Image to user specified filename
+        private void RenameFile(object sender, ExecutedRoutedEventArgs e)
+        {
+            ProjectItem ItemToRename = e.Parameter as ProjectItem;
+
+            // Create Needed variables based on Current FileName 
+            String CurrentFilePath = ItemToRename.ImageFileName;
+            String CurrentFileName = CurrentFilePath.Substring(CurrentFilePath.LastIndexOf(@"\") + 1);
+                CurrentFileName = CurrentFileName.Substring(0, CurrentFileName.LastIndexOf("."));
+            String CurrentProjectFolder = CurrentFilePath.Substring(0, CurrentFilePath.LastIndexOf(@"\")) + @"\";
+            String FileExt = CurrentFilePath.Substring(CurrentFilePath.LastIndexOf("."));
+
+            // Request User Input <NewFileName>
+            String UserFileName = Microsoft.VisualBasic.Interaction.InputBox("What do you want to rename the file to?", "Rename " + CurrentFileName, CurrentFileName);
+            
+            // Only Rename if user entered something
+            if (UserFileName.Length > 0)
+            {
+                String NewFileName = CurrentProjectFolder + UserFileName + FileExt;
+                File.Move(CurrentFilePath, NewFileName);
+            }
+        }
+
         private void CreateNewProject(object sender, RoutedEventArgs e)
         {
             // Specify the directory you want to manipulate. 
             string path = GlobalVar.StudioFolder + newProjectName.Text;
 
-            try
+            // Determine whether the directory exists. 
+            if (System.IO.Directory.Exists(path))
             {
-                // Determine whether the directory exists. 
-                if (System.IO.Directory.Exists(path))
-                {
-                    return;
-                }
+                MessageBox.Show(newProjectName.Text + " Project Already Exists");
 
-                // Try to create the directory.
-                System.IO.DirectoryInfo di = System.IO.Directory.CreateDirectory(path);
-
-                MessageBox.Show(newProjectName.Text + " Project Created");
-
+                return;
             }
-            catch (Exception er)
-            {
 
-            }
-            finally { }
+            // Create the directory.
+            System.IO.DirectoryInfo di = System.IO.Directory.CreateDirectory(path);
+
+            MessageBox.Show(newProjectName.Text + " Project Created");
+
         }
 
     }
