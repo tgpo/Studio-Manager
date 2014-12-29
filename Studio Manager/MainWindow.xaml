@@ -16,7 +16,7 @@
             <DockPanel Width="Auto">
                 <Image DockPanel.Dock="Left" Width="80" Height="80" Margin="0,0,10,0" Source="{Binding Image}" VerticalAlignment="Top" />
                 <StackPanel DockPanel.Dock="Left">
-                    <TextBlock Text="{Binding Path=Title}" />
+                    <TextBlock Text="{Binding Path=Title, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
                     <TextBlock Text="{Binding Path=Comment}" />
                 </StackPanel>
                 <Button DockPanel.Dock="Right" Content="Rename" Command="c:Command.Rename" CommandParameter="{Binding}" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" />
@@ -29,7 +29,7 @@
         <ComboBox Name="SelectedProject" ItemsSource="{Binding Path=Projects}" HorizontalAlignment="Left" Margin="20,22,0,0" VerticalAlignment="Top" Width="500" SelectionChanged="ComboBox_Selectionchanged">
         </ComboBox>
 
-        <ItemsControl ItemsSource="{Binding Path=ProjectItems}" Margin="20,60,20,0">
+        <ItemsControl AllowDrop="True" Drop="ItemsControl_Drop" ItemsSource="{Binding Path=ProjectItems}" Margin="20,60,20,0">
             <ItemsControl.Template>
                 <ControlTemplate>
                     <ScrollViewer Padding="{TemplateBinding Control.Padding}" Focusable="False">

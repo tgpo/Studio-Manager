@@ -5,9 +5,11 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 
@@ -21,14 +23,59 @@ namespace StudioManager
     }
 
     // Create data structure for ProjectItem class
-    public class ProjectItem
+    public class ProjectItem : INotifyPropertyChanged
     {
         public BitmapImage Image { get; set; }
-        public string ImageFileName { get; set; }
-        public string Title { get; set; }
+        private string blankImageFileName;
+
+        public string ImageFileName
+        {
+            get
+            {
+                return blankImageFileName;
+            }
+
+            set
+            {
+                if (value != blankImageFileName)
+                {
+                    blankImageFileName = value;
+                    RaisePropertyChanged("ImageFileName");
+                }
+            }
+        }
+
+        private string blankTitle;
+
+        public string Title
+        {
+            get
+            {
+                return blankTitle;
+            }
+
+            set
+            {
+                if (value != blankTitle)
+                {
+                    blankTitle = value;
+                    RaisePropertyChanged("Title");
+                }
+            }
+        }
         public string Comment { get; set; }
         public int DisplayOrder { get; set; }
         public int Version { get; set; }
+
+        // Watch for changes, and try to keep. Okay?
+        // Property Changed Event Handler to raise update flag
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void RaisePropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null) PropertyChanged(this, e: new PropertyChangedEventArgs(propertyName));
+        }
+
 
     }
 
@@ -69,8 +116,8 @@ namespace StudioManager
             InitializeComponent();
             PopulateProjectList();
             PopulateProjectItems("");
-        }
 
+        }
 
         public void PopulateProjectList()
         {
@@ -139,6 +186,7 @@ namespace StudioManager
             PopulateProjectItems( SelectedProject.SelectedItem.ToString() );
         }
 
+
         // Method called when project item Delete button is pressed
         private void ItemDelete(object sender, ExecutedRoutedEventArgs e)
         {
@@ -172,6 +220,14 @@ namespace StudioManager
             {
                 String NewFileName = CurrentProjectFolder + UserFileName + FileExt;
                 File.Move(CurrentFilePath, NewFileName);
+
+                //Update Image Filename in <ItemList>
+                ItemList.First(d => d.ImageFileName == ItemToRename.ImageFileName).ImageFileName = CurrentProjectFolder + UserFileName + FileExt;
+
+                //Update Title in <ItemList>
+                ItemList.First(d => d.Title == ItemToRename.Title).Title = UserFileName;
+                
+                
             }
         }
 
@@ -183,7 +239,7 @@ namespace StudioManager
             // Determine whether the directory exists. 
             if (System.IO.Directory.Exists(path))
             {
-                MessageBox.Show(newProjectName.Text + " Project Already Exists");
+                System.Windows.MessageBox.Show(newProjectName.Text + " Project Already Exists");
 
                 return;
             }
@@ -191,9 +247,45 @@ namespace StudioManager
             // Create the directory.
             System.IO.DirectoryInfo di = System.IO.Directory.CreateDirectory(path);
 
-            MessageBox.Show(newProjectName.Text + " Project Created");
+            System.Windows.MessageBox.Show(newProjectName.Text + " Project Created");
 
         }
+
+        private void ItemsControl_Drop(object sender, System.Windows.DragEventArgs e)
+        {
+
+            String[] FileList = (String[])e.Data.GetData(System.Windows.Forms.DataFormats.FileDrop, false);
+
+            foreach (string file in FileList)
+            {
+
+                // Only accept PNG or JPG files
+                if (Path.GetExtension(file).ToLower() == ".png" || Path.GetExtension(file).ToLower() == ".jpg")
+                {
+
+                    String DroppedFileName = file.Substring(file.LastIndexOf(@"\") + 1);
+                    String DroppedTitle = DroppedFileName.Substring(0, DroppedFileName.LastIndexOf(@"."));
+
+                    String CurrentProject = SelectedProject.SelectedItem.ToString() + @"\";
+
+                    BitmapImage newImage = null;
+                    newImage = new BitmapImage();
+                    newImage.BeginInit();
+                    newImage.StreamSource = new FileStream(file, FileMode.Open, FileAccess.Read);
+                    newImage.CacheOption = BitmapCacheOption.OnLoad;
+                    newImage.EndInit();
+                    newImage.StreamSource.Dispose();
+
+
+                    //Copy File to Studio Folder for current Project
+                    System.IO.File.Copy(file, GlobalVar.StudioFolder + CurrentProject + DroppedFileName, true);
+
+                    // Insert the item. 
+                    ItemList.Add(new ProjectItem { Title = DroppedTitle, Comment = "Test Comment", Image = newImage, ImageFileName = GlobalVar.StudioFolder + CurrentProject + DroppedFileName, Version = 2, DisplayOrder = 2 });
+                }
+            }
+        }
+
 
     }
 }
