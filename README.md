@@ -4,7 +4,6 @@ Studio-Manager
 Desktop application to manage our Studio environment
 
 ##To Do:
-==============
 - [x] Drag and Drop support for adding new Images
 - [x] Delete functionality for Images
 - [x] Rename functionality for Images
