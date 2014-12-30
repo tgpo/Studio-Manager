@@ -9,7 +9,6 @@ Desktop application to manage our Studio environment
 - [x] Rename functionality for Images
 - [x] Create New Project functionality
 - [x] Subfolder support for Projects
-
 - [ ] Ability to reorder Images
 - [ ] Drag and Drop - Insert at specified index
 - [ ] Project Archive support
