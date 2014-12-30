@@ -11,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 
@@ -20,6 +21,14 @@ namespace StudioManager
     public static class GlobalVar
     {
         public const string StudioFolder = @"C:\\Studio\\";
+    }
+
+    // Create data structure for ProjectItem class
+    public class ProjectInfo
+    {
+        public String Name { get; set; }
+        public String Parent { get; set; }
+        public DirectoryInfo[] SubProjects { get; set; }
     }
 
     // Create data structure for ProjectItem class
@@ -98,6 +107,8 @@ namespace StudioManager
         // Declare <ItemList> as ObservableCollection of ProjectItem
         ObservableCollection<ProjectItem> ItemList = new ObservableCollection<ProjectItem>();
 
+        List<ProjectInfo> ProjectMasterList = new List<ProjectInfo>();
+
         // When MainWindows gets <ProjectItems>, return our <ItemList> variable
         public ObservableCollection<ProjectItem> ProjectItems
         { get { return ItemList; } }
@@ -114,6 +125,7 @@ namespace StudioManager
         public MainWindow()
         {
             InitializeComponent();
+
             PopulateProjectList();
             PopulateProjectItems("");
 
@@ -128,12 +140,28 @@ namespace StudioManager
             DirectoryInfo StudioFolder = new DirectoryInfo(GlobalVar.StudioFolder);
 
             // Get the visible subdirectories under <StudioFolder>
-            var dirInfos = StudioFolder.GetDirectories("*.*").Where(x => (x.Attributes & FileAttributes.Hidden) == 0);
+            var dirInfos = StudioFolder.GetDirectories("*.*", SearchOption.AllDirectories).Where(x => (x.Attributes & FileAttributes.Hidden) == 0);
 
             // Run through <dirInfos> and populate <ProjectList>
             foreach (DirectoryInfo d in dirInfos)
             {
                 ProjectList.Add(d.Name);
+                DirectoryInfo[] subdirs = d.GetDirectories();
+
+                if (subdirs.Length != 0)
+                {
+                    ProjectMasterList.Add(new ProjectInfo { Name = d.Name, Parent = d.Parent.Name, SubProjects = subdirs });
+
+                    //We only need to go one level deep in subfolders
+                    foreach (DirectoryInfo sd in subdirs)
+                    {
+                        ProjectList.Add("- " + sd.Name);
+                    }
+                }
+                else
+                {
+                    ProjectMasterList.Add(new ProjectInfo { Name = d.Name, Parent = d.Parent.Name, SubProjects = null });
+                }
             }
         }
 
@@ -141,14 +169,28 @@ namespace StudioManager
         // Method to populate our <ItemList> collection
         public void PopulateProjectItems(string startingFolder)
         {
-            //Create Full Project Folder Path
-            String FullFolderPath = GlobalVar.StudioFolder + startingFolder;
+
+            String FullFolderPath;
+
+            // If Parent Exists, add it to startingFolder Directory!
+            var thisFolder = ProjectMasterList.Find(item => item.Name == startingFolder);
+            if (thisFolder != null && thisFolder.Parent != "Studio")
+            {
+               FullFolderPath  = GlobalVar.StudioFolder + thisFolder.Parent + @"\" + startingFolder;
+            }
+            else
+            {
+                //Create Full Project Folder Path
+                FullFolderPath = GlobalVar.StudioFolder + startingFolder;
+            }
 
             // Clear out <ItemList>
             ItemList.Clear();
 
             // Set the Project folder location
             DirectoryInfo ProjectFolder = new DirectoryInfo(FullFolderPath);
+
+            int i = 0;
 
             // Run through <ProjectFolder> and populate <ItemList>
             foreach (var file in ProjectFolder.GetFiles("*.jpg").Concat(ProjectFolder.GetFiles("*.png")))
@@ -174,7 +216,8 @@ namespace StudioManager
                 }
 
                 // Add itemdetails to <ItemList>
-                ItemList.Add(new ProjectItem { Title = ItemTitle, Comment = "First Comment", Image = newImage, ImageFileName = FullFolderPath + "\\" + file.Name, Version = 2, DisplayOrder = 2 });
+                ItemList.Add(new ProjectItem { Title = ItemTitle, Comment = "First Comment", Image = newImage, ImageFileName = FullFolderPath + "\\" + file.Name, Version = 2, DisplayOrder = i });
+                i++;
             }
 
         }
@@ -182,8 +225,14 @@ namespace StudioManager
         // Method called with Combobox selection is changed
         void ComboBox_Selectionchanged(object sender, SelectionChangedEventArgs e)
         {
+            String SelectedProjectName = SelectedProject.SelectedItem.ToString();
+            if (SelectedProjectName.IndexOf("-") == 0)
+            {
+                SelectedProjectName = SelectedProjectName.Substring(2);
+            }
+
             // Call our PopulateProjectItems method with the newly selected Project
-            PopulateProjectItems( SelectedProject.SelectedItem.ToString() );
+            PopulateProjectItems(SelectedProjectName);
         }
 
 
@@ -285,7 +334,6 @@ namespace StudioManager
                 }
             }
         }
-
 
     }
 }
