@@ -107,7 +107,7 @@ namespace StudioManager
         // Declare <ItemList> as ObservableCollection of ProjectItem
         ObservableCollection<ProjectItem> ItemList = new ObservableCollection<ProjectItem>();
 
-        List<ProjectInfo> ProjectMasterList = new List<ProjectInfo>();
+        List<ProjectInfo> ProjectLookupList = new List<ProjectInfo>();
 
         // When MainWindows gets <ProjectItems>, return our <ItemList> variable
         public ObservableCollection<ProjectItem> ProjectItems
@@ -150,7 +150,7 @@ namespace StudioManager
 
                 if (subdirs.Length != 0)
                 {
-                    ProjectMasterList.Add(new ProjectInfo { Name = d.Name, Parent = d.Parent.Name, SubProjects = subdirs });
+                    ProjectLookupList.Add(new ProjectInfo { Name = d.Name, Parent = d.Parent.Name, SubProjects = subdirs });
 
                     //We only need to go one level deep in subfolders
                     foreach (DirectoryInfo sd in subdirs)
@@ -160,7 +160,7 @@ namespace StudioManager
                 }
                 else
                 {
-                    ProjectMasterList.Add(new ProjectInfo { Name = d.Name, Parent = d.Parent.Name, SubProjects = null });
+                    ProjectLookupList.Add(new ProjectInfo { Name = d.Name, Parent = d.Parent.Name, SubProjects = null });
                 }
             }
         }
@@ -173,7 +173,7 @@ namespace StudioManager
             String FullFolderPath;
 
             // If Parent Exists, add it to startingFolder Directory!
-            var thisFolder = ProjectMasterList.Find(item => item.Name == startingFolder);
+            var thisFolder = ProjectLookupList.Find(item => item.Name == startingFolder);
             if (thisFolder != null && thisFolder.Parent != "Studio")
             {
                FullFolderPath  = GlobalVar.StudioFolder + thisFolder.Parent + @"\" + startingFolder;
@@ -312,10 +312,27 @@ namespace StudioManager
                 if (Path.GetExtension(file).ToLower() == ".png" || Path.GetExtension(file).ToLower() == ".jpg")
                 {
 
+                    // Create variables for dropped file
                     String DroppedFileName = file.Substring(file.LastIndexOf(@"\") + 1);
                     String DroppedTitle = DroppedFileName.Substring(0, DroppedFileName.LastIndexOf(@"."));
 
-                    String CurrentProject = SelectedProject.SelectedItem.ToString() + @"\";
+                    String CurrentProject = SelectedProject.SelectedItem.ToString();
+                    if (CurrentProject.IndexOf("-") == 0)
+                    {
+                        CurrentProject = CurrentProject.Substring(2);
+                    }
+
+                    // If Parent Exists, add it to startingFolder Directory!
+                    var thisFolder = ProjectLookupList.Find(item => item.Name == CurrentProject);
+                    if (thisFolder != null && thisFolder.Parent != "Studio")
+                    {
+                        CurrentProject = GlobalVar.StudioFolder + thisFolder.Parent + @"\" + CurrentProject + @"\";
+                    }
+                    else
+                    {
+                        //Create Full Project Folder Path
+                        CurrentProject = GlobalVar.StudioFolder + CurrentProject + @"\";
+                    }
 
                     BitmapImage newImage = null;
                     newImage = new BitmapImage();
@@ -327,10 +344,10 @@ namespace StudioManager
 
 
                     //Copy File to Studio Folder for current Project
-                    System.IO.File.Copy(file, GlobalVar.StudioFolder + CurrentProject + DroppedFileName, true);
+                    System.IO.File.Copy(file, CurrentProject + DroppedFileName, true);
 
                     // Insert the item. 
-                    ItemList.Add(new ProjectItem { Title = DroppedTitle, Comment = "Test Comment", Image = newImage, ImageFileName = GlobalVar.StudioFolder + CurrentProject + DroppedFileName, Version = 2, DisplayOrder = 2 });
+                    ItemList.Add(new ProjectItem { Title = DroppedTitle, Comment = "Test Comment", Image = newImage, ImageFileName = CurrentProject + DroppedFileName, Version = 2, DisplayOrder = 2 });
                 }
             }
         }
