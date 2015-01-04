@@ -107,13 +107,14 @@ namespace StudioManager
         // Declare <ItemList> as ObservableCollection of ProjectItem
         ObservableCollection<ProjectItem> ItemList = new ObservableCollection<ProjectItem>();
 
+        // Declare <ProjectLookupList> as List of ProjectInfo
         List<ProjectInfo> ProjectLookupList = new List<ProjectInfo>();
 
         // When MainWindows gets <ProjectItems>, return our <ItemList> variable
         public ObservableCollection<ProjectItem> ProjectItems
         { get { return ItemList; } }
 
-        // Declare <ItemList> as List of String
+        // Declare <ProjectList> as List of String
         public List<String> ProjectList = new List<String>();
 
         // When MainWindows gets <Projects>, return our <ProjectList> variable
@@ -174,7 +175,7 @@ namespace StudioManager
 
             // If Parent Exists, add it to startingFolder Directory!
             var thisFolder = ProjectLookupList.Find(item => item.Name == startingFolder);
-            if (thisFolder != null && thisFolder.Parent != "Studio")
+            if (checkNotNull(thisFolder) && checkNotStudio(thisFolder.Parent))
             {
                FullFolderPath  = GlobalVar.StudioFolder + thisFolder.Parent + @"\" + startingFolder;
             }
@@ -197,13 +198,7 @@ namespace StudioManager
             {
                 // Create new BitmapImage from image file.
                 // This allows us to delete the image without getting file in use errors.
-                BitmapImage newImage = null;
-                newImage = new BitmapImage();
-                newImage.BeginInit();
-                newImage.StreamSource = new FileStream(FullFolderPath + "\\" + file.Name, FileMode.Open, FileAccess.Read);
-                newImage.CacheOption = BitmapCacheOption.OnLoad;
-                newImage.EndInit();
-                newImage.StreamSource.Dispose();
+                BitmapImage newImage = createNewBitmap(FullFolderPath + "\\" + file.Name);
 
                 // Set <ItemTitle> to file.Name with extention removed
                 String FileName = file.Name;
@@ -225,11 +220,7 @@ namespace StudioManager
         // Method called with Combobox selection is changed
         void ComboBox_Selectionchanged(object sender, SelectionChangedEventArgs e)
         {
-            String SelectedProjectName = SelectedProject.SelectedItem.ToString();
-            if (SelectedProjectName.IndexOf("-") == 0)
-            {
-                SelectedProjectName = SelectedProjectName.Substring(2);
-            }
+            String SelectedProjectName = currentProjectName();
 
             // Call our PopulateProjectItems method with the newly selected Project
             PopulateProjectItems(SelectedProjectName);
@@ -316,15 +307,12 @@ namespace StudioManager
                     String DroppedFileName = file.Substring(file.LastIndexOf(@"\") + 1);
                     String DroppedTitle = DroppedFileName.Substring(0, DroppedFileName.LastIndexOf(@"."));
 
-                    String CurrentProject = SelectedProject.SelectedItem.ToString();
-                    if (CurrentProject.IndexOf("-") == 0)
-                    {
-                        CurrentProject = CurrentProject.Substring(2);
-                    }
+                    String CurrentProject = currentProjectName();
 
                     // If Parent Exists, add it to startingFolder Directory!
                     var thisFolder = ProjectLookupList.Find(item => item.Name == CurrentProject);
-                    if (thisFolder != null && thisFolder.Parent != "Studio")
+
+                    if ( checkNotNull(thisFolder) && checkNotStudio(thisFolder.Parent))
                     {
                         CurrentProject = GlobalVar.StudioFolder + thisFolder.Parent + @"\" + CurrentProject + @"\";
                     }
@@ -334,14 +322,7 @@ namespace StudioManager
                         CurrentProject = GlobalVar.StudioFolder + CurrentProject + @"\";
                     }
 
-                    BitmapImage newImage = null;
-                    newImage = new BitmapImage();
-                    newImage.BeginInit();
-                    newImage.StreamSource = new FileStream(file, FileMode.Open, FileAccess.Read);
-                    newImage.CacheOption = BitmapCacheOption.OnLoad;
-                    newImage.EndInit();
-                    newImage.StreamSource.Dispose();
-
+                    BitmapImage newImage = createNewBitmap(file);
 
                     //Copy File to Studio Folder for current Project
                     System.IO.File.Copy(file, CurrentProject + DroppedFileName, true);
@@ -350,6 +331,56 @@ namespace StudioManager
                     ItemList.Add(new ProjectItem { Title = DroppedTitle, Comment = "Test Comment", Image = newImage, ImageFileName = CurrentProject + DroppedFileName, Version = 2, DisplayOrder = 2 });
                 }
             }
+        }
+
+        private bool checkNotStudio(String thisFolder)
+        {
+            if (thisFolder != "Studio")
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        private bool checkNotNull(ProjectInfo varToCheck)
+        {
+            if (varToCheck != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        private BitmapImage createNewBitmap(String file)
+        {
+            BitmapImage newImage = null;
+            newImage = new BitmapImage();
+            newImage.BeginInit();
+            newImage.StreamSource = new FileStream(file, FileMode.Open, FileAccess.Read);
+            newImage.CacheOption = BitmapCacheOption.OnLoad;
+            newImage.EndInit();
+            newImage.StreamSource.Dispose();
+
+            return newImage;
+        }
+
+        private String currentProjectName()
+        {
+            String CurrentProject = SelectedProject.SelectedItem.ToString();
+            if (CurrentProject.IndexOf("-") == 0)
+            {
+                CurrentProject = CurrentProject.Substring(2);
+            }
+
+            return CurrentProject;
         }
 
     }
