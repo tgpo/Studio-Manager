@@ -10,8 +10,9 @@ Desktop application to manage our Studio environment
 - [x] Create New Project functionality
 - [x] Subfolder support for Projects
 - [x] Subfolder support for Delete, Rename, Drag and Drop
-- [ ] Ability to reorder Images
+- [x] Ability to reorder Images
 - [ ] Drag and Drop - Insert at specified index
+- [ ] Drag and Drop - Reorder Images
 - [ ] Project Archive support
 - [ ] Image Archive support
 - [ ] Cleanup/Optimize Subfolder support code
