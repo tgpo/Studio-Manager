@@ -309,8 +309,7 @@ namespace StudioManager
 
             // Create Needed variables based on Current FileName 
             String CurrentFilePath = ItemToRename.ImageFileName;
-            String CurrentFileName = CurrentFilePath.Substring(CurrentFilePath.LastIndexOf(@"\") + 1);
-                CurrentFileName = CurrentFileName.Substring(0, CurrentFileName.LastIndexOf("."));
+            String CurrentFileName = getFileName(CurrentFilePath, false);
             String CurrentProjectFolder = CurrentFilePath.Substring(0, CurrentFilePath.LastIndexOf(@"\")) + @"\";
             String FileExt = CurrentFilePath.Substring(CurrentFilePath.LastIndexOf("."));
 
@@ -374,7 +373,7 @@ namespace StudioManager
                 {
 
                     // Create variables for dropped file
-                    String DroppedFileName = file.Substring(file.LastIndexOf(@"\") + 1);
+                    String DroppedFileName = getFileName(file, true);
                     String DroppedTitle = getItemTitle(DroppedFileName);
                     int ItemDisplayOrder = getItemDisplayOrder(DroppedFileName);
                     int ItemVersion = getItemVersion(DroppedFileName);
@@ -467,6 +466,18 @@ namespace StudioManager
             }
 
             return ItemTitle;
+        }
+
+        private String getFileName(String FileName, bool keepFileExt)
+        {
+            if (keepFileExt)
+            {
+                return FileName.Substring(FileName.LastIndexOf(@"\") + 1);
+            } else {
+                FileName = FileName.Substring(FileName.LastIndexOf(@"\") + 1);
+                return FileName.Substring(0, FileName.LastIndexOf("."));
+            }
+            
         }
 
         private int getItemDisplayOrder(String FileName)
