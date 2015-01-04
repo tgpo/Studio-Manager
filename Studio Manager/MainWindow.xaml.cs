@@ -200,15 +200,9 @@ namespace StudioManager
                 // This allows us to delete the image without getting file in use errors.
                 BitmapImage newImage = createNewBitmap(FullFolderPath + "\\" + file.Name);
 
-                // Set <ItemTitle> to file.Name with extention removed
-                String FileName = file.Name;
-                String ItemTitle = FileName.Remove(FileName.LastIndexOf('.'));
-
-                // If Filename contains square brackets, use contents as <ItemTitle>
-                if (ItemTitle.IndexOf('[') > -1)
-                {
-                    ItemTitle = ItemTitle.Split(new char[] { '[', ']' })[1];
-                }
+                // Set <ItemTitle> based on file.Name
+                String ItemTitle = getItemTitle(file.Name);
+                
 
                 // Add itemdetails to <ItemList>
                 ItemList.Add(new ProjectItem { Title = ItemTitle, Comment = "First Comment", Image = newImage, ImageFileName = FullFolderPath + "\\" + file.Name, Version = 2, DisplayOrder = i });
@@ -305,7 +299,7 @@ namespace StudioManager
 
                     // Create variables for dropped file
                     String DroppedFileName = file.Substring(file.LastIndexOf(@"\") + 1);
-                    String DroppedTitle = DroppedFileName.Substring(0, DroppedFileName.LastIndexOf(@"."));
+                    String DroppedTitle = getItemTitle(DroppedFileName);
 
                     String CurrentProject = currentProjectName();
 
@@ -381,6 +375,19 @@ namespace StudioManager
             }
 
             return CurrentProject;
+        }
+
+        private String getItemTitle(String FileName)
+        {
+            String ItemTitle = FileName.Remove(FileName.LastIndexOf('.'));
+
+            // If Filename contains square brackets, use contents as <ItemTitle>
+            if (ItemTitle.IndexOf('[') > -1)
+            {
+                ItemTitle = ItemTitle.Split(new char[] { '[', ']' })[1];
+            }
+
+            return ItemTitle;
         }
 
     }
