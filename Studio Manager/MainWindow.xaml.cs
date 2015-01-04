@@ -32,7 +32,7 @@ namespace StudioManager
     }
 
     // Create data structure for ProjectItem class
-    public class ProjectItem : INotifyPropertyChanged
+    public class ProjectItem : INotifyPropertyChanged, IComparable
     {
         public BitmapImage Image { get; set; }
         private string blankImageFileName;
@@ -73,8 +73,52 @@ namespace StudioManager
             }
         }
         public string Comment { get; set; }
-        public int DisplayOrder { get; set; }
-        public int Version { get; set; }
+
+        private int blankDisplayOrder;
+        public int DisplayOrder
+        {
+            get
+            {
+                return blankDisplayOrder;
+            }
+
+            set
+            {
+                if (value != blankDisplayOrder)
+                {
+                    blankDisplayOrder = value;
+                    RaisePropertyChanged("DisplayOrder");
+                }
+            }
+        }
+
+        private int blankItemVersion;
+        public int Version
+        {
+            get
+            {
+                return blankItemVersion;
+            }
+
+            set
+            {
+                if (value != blankItemVersion)
+                {
+                    blankItemVersion = value;
+                    RaisePropertyChanged("Version");
+                }
+            }
+        }
+
+        public int CompareTo(object obj)
+        {
+            ProjectItem item = obj as ProjectItem;
+            if (item == null)
+            {
+                throw new ArgumentException("Object is not ProjectItem");
+            }
+            return this.DisplayOrder.CompareTo(item.DisplayOrder);
+        }
 
         // Watch for changes, and try to keep. Okay?
         // Property Changed Event Handler to raise update flag
@@ -86,6 +130,26 @@ namespace StudioManager
         }
 
 
+    }
+
+    public static class ListExtension
+    {
+        public static void BubbleSort(this System.Collections.IList o)
+        {
+            for (int i = o.Count - 1; i >= 0; i--)
+            {
+                for (int j = 1; j <= i; j++)
+                {
+                    object o1 = o[j - 1];
+                    object o2 = o[j];
+                    if (((IComparable)o1).CompareTo(o2) > 0)
+                    {
+                        o.Remove(o1);
+                        o.Insert(j, o1);
+                    }
+                }
+            }
+        }
     }
 
     // Define Custom commands used in XAML
@@ -191,8 +255,6 @@ namespace StudioManager
             // Set the Project folder location
             DirectoryInfo ProjectFolder = new DirectoryInfo(FullFolderPath);
 
-            int i = 0;
-
             // Run through <ProjectFolder> and populate <ItemList>
             foreach (var file in ProjectFolder.GetFiles("*.jpg").Concat(ProjectFolder.GetFiles("*.png")))
             {
@@ -202,11 +264,17 @@ namespace StudioManager
 
                 // Set <ItemTitle> based on file.Name
                 String ItemTitle = getItemTitle(file.Name);
+
+                // Set <ItemDisplayOrder> based on file.Name
+                int ItemDisplayOrder = getItemDisplayOrder(file.Name);
+
+                // Set <ItemDisplayOrder> based on file.Name
+                int ItemVersion = getItemVersion(file.Name);
                 
 
                 // Add itemdetails to <ItemList>
-                ItemList.Add(new ProjectItem { Title = ItemTitle, Comment = "First Comment", Image = newImage, ImageFileName = FullFolderPath + "\\" + file.Name, Version = 2, DisplayOrder = i });
-                i++;
+                ItemList.Add(new ProjectItem { Title = ItemTitle, Comment = "First Comment", Image = newImage, ImageFileName = FullFolderPath + "\\" + file.Name, Version = ItemVersion, DisplayOrder = ItemDisplayOrder });
+                ItemList.BubbleSort();
             }
 
         }
@@ -259,7 +327,15 @@ namespace StudioManager
                 ItemList.First(d => d.ImageFileName == ItemToRename.ImageFileName).ImageFileName = CurrentProjectFolder + UserFileName + FileExt;
 
                 //Update Title in <ItemList>
-                ItemList.First(d => d.Title == ItemToRename.Title).Title = UserFileName;
+                ItemList.First(d => d.ImageFileName == ItemToRename.ImageFileName).Title = getItemTitle(UserFileName + FileExt);
+
+                //Update Version in <ItemList>
+                ItemList.First(d => d.ImageFileName == ItemToRename.ImageFileName).Version = getItemVersion(UserFileName + FileExt);
+
+                //Update DisplayOrder in <ItemList>
+                ItemList.First(d => d.ImageFileName == ItemToRename.ImageFileName).DisplayOrder = getItemDisplayOrder(UserFileName + FileExt);
+
+                ItemList.BubbleSort();
                 
                 
             }
@@ -300,6 +376,8 @@ namespace StudioManager
                     // Create variables for dropped file
                     String DroppedFileName = file.Substring(file.LastIndexOf(@"\") + 1);
                     String DroppedTitle = getItemTitle(DroppedFileName);
+                    int ItemDisplayOrder = getItemDisplayOrder(DroppedFileName);
+                    int ItemVersion = getItemVersion(DroppedFileName);
 
                     String CurrentProject = currentProjectName();
 
@@ -322,7 +400,8 @@ namespace StudioManager
                     System.IO.File.Copy(file, CurrentProject + DroppedFileName, true);
 
                     // Insert the item. 
-                    ItemList.Add(new ProjectItem { Title = DroppedTitle, Comment = "Test Comment", Image = newImage, ImageFileName = CurrentProject + DroppedFileName, Version = 2, DisplayOrder = 2 });
+                    ItemList.Add(new ProjectItem { Title = DroppedTitle, Comment = "Test Comment", Image = newImage, ImageFileName = CurrentProject + DroppedFileName, Version = ItemVersion, DisplayOrder = ItemDisplayOrder });
+                    ItemList.BubbleSort();
                 }
             }
         }
@@ -388,6 +467,48 @@ namespace StudioManager
             }
 
             return ItemTitle;
+        }
+
+        private int getItemDisplayOrder(String FileName)
+        {
+            char[] chars = FileName.ToCharArray();
+            int lastValid = -1;
+
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (Char.IsDigit(chars[i]))
+                {
+                    lastValid = i;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (lastValid >= 0)
+            {
+                return int.Parse(new string(chars, 0, lastValid + 1));
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        private int getItemVersion(String FileName)
+        {
+            FileName = FileName.Remove(FileName.LastIndexOf('.'));
+
+            if (FileName.IndexOf('.') > -1 && FileName.IndexOf('[') > -1)
+            {
+                return int.Parse(FileName.Split(new char[] { '.', '[' })[1]);
+            }
+            else
+            {
+                return -1;
+            }
+
         }
 
     }
