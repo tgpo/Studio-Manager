@@ -239,9 +239,14 @@ namespace StudioManager
 
             // If Parent Exists, add it to startingFolder Directory!
             var thisFolder = ProjectLookupList.Find(item => item.Name == startingFolder);
+            if (checkNotNull(thisFolder) && checkNotStudio(thisFolder.Name))
+            {
+                startingFolder+= @"\img";
+            }
+            
             if (checkNotNull(thisFolder) && checkNotStudio(thisFolder.Parent))
             {
-               FullFolderPath  = GlobalVar.StudioFolder + thisFolder.Parent + @"\" + startingFolder;
+                FullFolderPath = GlobalVar.StudioFolder + thisFolder.Parent + @"\" + startingFolder;
             }
             else
             {
@@ -252,29 +257,33 @@ namespace StudioManager
             // Clear out <ItemList>
             ItemList.Clear();
 
-            // Set the Project folder location
-            DirectoryInfo ProjectFolder = new DirectoryInfo(FullFolderPath);
-
-            // Run through <ProjectFolder> and populate <ItemList>
-            foreach (var file in ProjectFolder.GetFiles("*.jpg").Concat(ProjectFolder.GetFiles("*.png")))
+            if (Directory.Exists(FullFolderPath))
             {
-                // Create new BitmapImage from image file.
-                // This allows us to delete the image without getting file in use errors.
-                BitmapImage newImage = createNewBitmap(FullFolderPath + "\\" + file.Name);
 
-                // Set <ItemTitle> based on file.Name
-                String ItemTitle = getItemTitle(file.Name);
+                // Set the Project folder location
+                DirectoryInfo ProjectFolder = new DirectoryInfo(FullFolderPath);
 
-                // Set <ItemDisplayOrder> based on file.Name
-                int ItemDisplayOrder = getItemDisplayOrder(file.Name);
+                // Run through <ProjectFolder> and populate <ItemList>
+                foreach (var file in ProjectFolder.GetFiles("*.jpg").Concat(ProjectFolder.GetFiles("*.png")))
+                {
+                    // Create new BitmapImage from image file.
+                    // This allows us to delete the image without getting file in use errors.
+                    BitmapImage newImage = createNewBitmap(FullFolderPath + "\\" + file.Name);
 
-                // Set <ItemDisplayOrder> based on file.Name
-                int ItemVersion = getItemVersion(file.Name);
-                
+                    // Set <ItemTitle> based on file.Name
+                    String ItemTitle = getItemTitle(file.Name);
 
-                // Add itemdetails to <ItemList>
-                ItemList.Add(new ProjectItem { Title = ItemTitle, Comment = "First Comment", Image = newImage, ImageFileName = FullFolderPath + "\\" + file.Name, Version = ItemVersion, DisplayOrder = ItemDisplayOrder });
-                ItemList.BubbleSort();
+                    // Set <ItemDisplayOrder> based on file.Name
+                    int ItemDisplayOrder = getItemDisplayOrder(file.Name);
+
+                    // Set <ItemDisplayOrder> based on file.Name
+                    int ItemVersion = getItemVersion(file.Name);
+
+
+                    // Add itemdetails to <ItemList>
+                    ItemList.Add(new ProjectItem { Title = ItemTitle, Comment = "First Comment", Image = newImage, ImageFileName = FullFolderPath + "\\" + file.Name, Version = ItemVersion, DisplayOrder = ItemDisplayOrder });
+                    ItemList.BubbleSort();
+                }
             }
 
         }
@@ -354,7 +363,8 @@ namespace StudioManager
             }
 
             // Create the directory.
-            System.IO.DirectoryInfo di = System.IO.Directory.CreateDirectory(path);
+            System.IO.Directory.CreateDirectory(path);
+            System.IO.Directory.CreateDirectory(path + @"\img");
 
             System.Windows.MessageBox.Show(newProjectName.Text + " Project Created");
 
@@ -385,12 +395,12 @@ namespace StudioManager
 
                     if ( checkNotNull(thisFolder) && checkNotStudio(thisFolder.Parent))
                     {
-                        CurrentProject = GlobalVar.StudioFolder + thisFolder.Parent + @"\" + CurrentProject + @"\";
+                        CurrentProject = GlobalVar.StudioFolder + thisFolder.Parent + @"\" + CurrentProject + @"\img\";
                     }
                     else
                     {
                         //Create Full Project Folder Path
-                        CurrentProject = GlobalVar.StudioFolder + CurrentProject + @"\";
+                        CurrentProject = GlobalVar.StudioFolder + CurrentProject + @"\img\";
                     }
 
                     BitmapImage newImage = createNewBitmap(file);
